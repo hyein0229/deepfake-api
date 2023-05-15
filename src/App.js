@@ -1,25 +1,51 @@
-import logo from './logo.svg';
-import './App.css';
+import React, {useEffect, useState} from 'react';
+import { Link } from "react-router-dom";
+import {Button} from "@material-ui/core";
+import {useNavigate} from "react-router-dom";
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+
+    const navigate = useNavigate();
+
+    const join = () => {
+        navigate('/join')
+    }
+
+    const login = () => {
+        navigate('/login')
+    }
+
+    const uploadPage = () => {
+        navigate('/upload')
+    }
+
+    const logout = () => {
+        navigate('/logout')
+    }
+
+    if(localStorage.getItem("memberId") == ""){
+        return (
+            <div align={"center"}>
+                <Button type={"primary"} variant={"contained"} onClick={join}>
+                    회원가입
+                </Button>
+                <Button type={"primary"} variant={"contained"} onClick={login}>
+                    로그인
+                </Button>
+            </div>
+        );
+    }else{
+        return (
+            <div align={"center"}>
+                <Button type={"primary"} variant={"contained"} onClick={uploadPage}>
+                    이미지 업로드
+                </Button>
+                <Button type={"primary"} variant={"contained"} onClick={logout}>
+                    로그아웃
+                </Button>
+            </div>
+        );
+    }
 }
 
 export default App;
