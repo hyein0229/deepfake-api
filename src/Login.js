@@ -68,7 +68,6 @@ export default function Join() {
             setIsPassword(false);
         }
     };
-
     const loginHandler = (event) => {
         // 버튼을 눌렀을 때 페이지가 리로드 되는것을 막음
         event.preventDefault();

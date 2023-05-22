@@ -23,6 +23,10 @@ function App() {
         navigate('/logout')
     }
 
+    const goWebEditor = () => {
+        navigate('/webEditor')
+    }
+
     if(localStorage.getItem("memberId") == ""){
         return (
             <div align={"center"}>
@@ -39,6 +43,9 @@ function App() {
             <div align={"center"}>
                 <Button type={"primary"} variant={"contained"} onClick={uploadPage}>
                     이미지 업로드
+                </Button>
+                <Button type={"primary"} variant={"contained"} onClick={goWebEditor}>
+                    웹에디터
                 </Button>
                 <Button type={"primary"} variant={"contained"} onClick={logout}>
                     로그아웃

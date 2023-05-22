@@ -6,6 +6,7 @@ import Join from "./Join";
 import Login from "./Login";
 import Logout from "./Logout";
 import Upload from "./Upload";
+import WebEditor from "./WebEditor";
 
 //const root = ReactDOM.createRoot(document.getElementById('root'));
 ReactDOM.render(
@@ -16,6 +17,7 @@ ReactDOM.render(
             <Route path={"/login"} element={<Login/>} />
             <Route path={"/logout"} element={<Logout/>} />
             <Route path={"/upload"} element={<Upload/>} />
+            <Route path={"/webEditor"} element={<WebEditor/>} />
         </Routes>
     </BrowserRouter>,
     document.getElementById('root')
