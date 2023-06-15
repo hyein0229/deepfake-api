@@ -10,15 +10,11 @@ import axios from "axios";
 import youtubeicon from './free-icon-youtube-3128307.png'
 import videoicon from './free-icon-video-camera-with-play-button-73534.png'
 import videoPlugin from '@leeonfield/editor-plugin-video'
-import {useState} from "react";
 
 export default function ToastEditor() {
 
-    let inputRef;
     const editorRef = useRef();
     const navigate = useNavigate();
-    const [source, setSource] = useState();
-    const [file, setFile] = useState(null)
 
     /*
         youtube 영상 공유를 위한 툴바 아이콘 생성
@@ -65,86 +61,6 @@ export default function ToastEditor() {
     container.appendChild(description);
     container.appendChild(urlInput);
 
-    /*
-        비디오 삽입을 위한 툴바 생성
-     */
-    // const videoEl = document.createElement('span');
-    // videoEl.style = 'cursor: pointer;' // 커서 모양 : 손가락 모양
-    //
-    // const videoIcon = document.createElement('img');
-    // videoIcon.setAttribute('src', videoicon);
-    // videoIcon.setAttribute('width', '32');
-    // videoEl.appendChild(videoIcon);
-    //
-    // // youtube icon 클릭 시 팝업 바디 생성
-    // const videoContainer = document.createElement('div');
-    // const videoDescription = document.createElement('p');
-    // videoDescription.textContent = "동영상을 삽입하시오!";
-    //
-    // const videoInput = document.createElement('input');
-    // videoInput.style.width = '100%';
-    //
-    // // 팝업 input 창에 내용 입력 시 호출됨
-    // videoInput.addEventListener('keyup', (e) => {
-    //
-    //     // 엔터를 쳤을 때 입력값이 Youtube url 인지 정규식으로 검사
-    //     if (e.key === 'Enter') {
-    //         // iframe 태그 생성
-    //         let str = '<video src="${e.target.value}" controls autoplay></video>';
-    //
-    //         // 마크다운 모드에서 iframe 태그 삽입 후, 팝업을 닫고 위지윅 모드로 변환
-    //         editorRef.current?.getInstance().changeMode('markdown');
-    //         editorRef.current?.getInstance().insertText(str);
-    //         editorRef.current?.getInstance().eventEmitter.emit('closePopup');
-    //         editorRef.current?.getInstance().changeMode('wysiwyg');
-    //     }
-    // });
-    //
-    // // 팝업 창의 child tag 추가
-    // videoContainer.appendChild(videoDescription);
-    // videoContainer.appendChild(videoInput);
-
-    const handleFileChange = (event) => {
-        const file = event.target.files[0];
-        const url = URL.createObjectURL(file)
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onloadend = () => {
-            setSource(url);
-            setFile(file);
-        }
-
-        let htmlCode = '<video className="VideoInput_video" width="100%" height="50%" controls src="${source}"/>'
-        let str = '<div dangerouslySetInnerHTML={{ __html: htmlCode }}></div>'
-
-        //let str = "<video src='${url}' controls autoplay/>"
-        // 마크다운 모드에서 iframe 태그 삽입 후, 팝업을 닫고 위지윅 모드로 변환
-        editorRef.current?.getInstance().changeMode('markdown');
-        editorRef.current?.getInstance().insertText(str);
-        //editorRef.current?.getInstance().changeMode('wysiwyg');
-    }
-
-    const sendToServer = () => {
-        const formData = new FormData();
-        formData.append('file', file);
-        console.log(file)
-
-        axios({
-            method:"post",
-            url:"/uploadVideo",
-            data: formData
-        })
-            .then((response)=>{
-                if(response.status === 200){
-                    alert("파일 업로드 성공!")
-                    navigate("/")
-                } else {
-                    alert("서버에 파일 업로드하는 것을 실패했습니다.")
-                }
-            })
-            .catch((error) => {
-            })
-    }
     /*
         등록 버튼 누를 시 서버로 html 글을 post
      */
@@ -197,17 +113,7 @@ export default function ToastEditor() {
                             body: container,
                             style: {width: 'auto'},
                         }
-                    }],
-                    // [{
-                    //     name: 'Video',
-                    //     tooltip: 'Video',
-                    //     el: videoEl,
-                    //     popup:{
-                    //         body: videoContainer,
-                    //         style: {width: 'auto'}
-                    //     }
-                    //
-                    // }]
+                    }]
                 ]}
                 // youtube 삽입 iframe 태그 사용 설정
                 customHTMLRenderer={{
@@ -254,26 +160,6 @@ export default function ToastEditor() {
                     }
                 }}
             ></Editor>
-            <input
-                ref={refParam => inputRef = refParam}
-                className="VideoInput_input"
-                type="file"
-                onChange={handleFileChange}
-                accept=".mov,.mp4"
-                style={{display: "none"}}
-            />
-            <Button type={"primary"} variant={"contained"} onClick={() => inputRef.click()}>
-                Choose
-            </Button>
-            {source && (
-                <video
-                    className="VideoInput_video"
-                    width="1%"
-                    height="1%"
-                    controls
-                    src={source}
-                />
-            )}
             <div align={"center"}>
                 <Button size={"large"} color="secondary" variant={"contained"} onClick={register}>
                     등록

@@ -27,6 +27,10 @@ function App() {
         navigate('/webEditor')
     }
 
+    const VideoUpload = () => {
+        navigate('./VideoUpload')
+    }
+
     if(localStorage.getItem("memberId") == ""){
         return (
             <div align={"center"}>
@@ -46,6 +50,9 @@ function App() {
                 </Button>
                 <Button type={"primary"} variant={"contained"} onClick={goWebEditor}>
                     웹에디터
+                </Button>
+                <Button type={"primary"} variant={"contained"} onClick={VideoUpload}>
+                    동영상 업로드
                 </Button>
                 <Button type={"primary"} variant={"contained"} onClick={logout}>
                     로그아웃

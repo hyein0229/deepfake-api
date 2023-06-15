@@ -7,6 +7,7 @@ import Login from "./Login";
 import Logout from "./Logout";
 import Upload from "./Upload";
 import WebEditor from "./WebEditor";
+import VideoUpload from "./VideoUpload";
 
 //const root = ReactDOM.createRoot(document.getElementById('root'));
 ReactDOM.render(
@@ -18,6 +19,7 @@ ReactDOM.render(
             <Route path={"/logout"} element={<Logout/>} />
             <Route path={"/upload"} element={<Upload/>} />
             <Route path={"/webEditor"} element={<WebEditor/>} />
+            <Route path={"/VideoUpload"} element={<VideoUpload/>} />
         </Routes>
     </BrowserRouter>,
     document.getElementById('root')

@@ -51,7 +51,7 @@ export default function Upload() {
     return (
         <div align={"center"}>
             <input
-                accept="image/*"
+                accept="image/* video/*"
                 type="file"
                 ref={refParam => inputRef = refParam}
                 onChange={e => preview(e)}
