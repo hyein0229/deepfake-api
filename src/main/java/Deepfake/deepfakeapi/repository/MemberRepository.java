@@ -20,6 +20,10 @@ public class MemberRepository {
         return member;
     }
 
+    public Member findOne(String id){
+        return em.find(Member.class, id);
+    }
+
     public Optional<Member> findByUserId(String id){
         return em.createQuery("select m from Member m where m.userId = :id", Member.class)
                 .setParameter("id", id)

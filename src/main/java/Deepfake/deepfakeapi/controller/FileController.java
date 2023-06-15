@@ -22,12 +22,15 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.ssl.SSLContextBuilder;
+import org.jcodec.api.FrameGrab;
+import org.jcodec.common.io.NIOUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.http.*;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.CookieValue;
@@ -44,6 +47,7 @@ import javax.swing.text.html.HTML;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -59,57 +63,83 @@ import java.util.List;
 public class FileController {
 
     private final FileService fileService;
+    private final VideoController videoController;
 
     /*
         파일 업로드
      */
-//    @PostMapping("/upload")
-//    public ResponseEntity<?> upload(@CookieValue("memberCode") Cookie cookie, @RequestParam("file") MultipartFile files) throws Exception{
-//
-//        // cookie 값 받아졌는지 로그 확인
-//        log.info(cookie.getValue());
-//
-//        // 파일이 존재하면
-//        if(!files.isEmpty()){
-//            try {
-////                // 딥페이크 검출 진행
-//                //deepFake(cookie, files);
-////                if(isDeepfake){
-////                    return new ResponseEntity<>("deepfake image", HttpStatus.OK);
-////                }
-//
-//                // 기존 파일이름을 다른 파일 이름으로 저장하기 위해 변환
-//                String origFileName = files.getOriginalFilename();
-//                String filename = new MD5Generator(origFileName).toString();
-//
-//                // 서버에 저장될 위치
-//                String savedPath = System.getProperty("user.dir") + "\\files";
-//                if(!new java.io.File(savedPath).exists()){
-//                    try{
-//                        new File(savedPath).mkdir();
-//                    }catch(Exception e){
-//                        e.getStackTrace();
-//                    }
+    @PostMapping("/uploadVideo")
+    public ResponseEntity<?> upload(@RequestParam("file") MultipartFile files) throws Exception{
+
+        // 파일이 존재하면
+        if(!files.isEmpty()){
+            try {
+//                // 딥페이크 검출 진행
+                //deepFake(cookie, files);
+//                if(isDeepfake){
+//                    return new ResponseEntity<>("deepfake image", HttpStatus.OK);
 //                }
-//                String filePath = savedPath + "\\" + filename;
-//                files.transferTo(new File(filePath));
-//
-//                // DB에 저장될 파일 정보 객체 생성
-//                FileEntity file = new FileEntity();
-//                file.setOrigFilename(origFileName);
-//                file.setStoredFilename(filename);
-//                file.setFilePath(filePath);
-//
-//                fileService.saveFile(file);
-//
-//                return new ResponseEntity<>("Success", HttpStatus.OK);
-//
-//            }catch(Exception e){
-//                e.printStackTrace();
-//            }
-//        }
-//        return new ResponseEntity<>("File not exists", HttpStatus.OK);
+
+                // 기존 파일이름을 다른 파일 이름으로 저장하기 위해 변환
+                String origFileName = files.getOriginalFilename();
+                String filename = new MD5Generator(origFileName).toString();
+
+                // 서버에 저장될 위치
+                String savedPath = System.getProperty("user.dir") + "\\files";
+                if(!new java.io.File(savedPath).exists()){
+                    try{
+                        new File(savedPath).mkdir();
+                    }catch(Exception e){
+                        e.getStackTrace();
+                    }
+                }
+                String filePath = savedPath + "\\" + filename + ".mp4";
+                // 파일이 로컬에 저장됨
+                files.transferTo(new File(filePath));
+
+                /*
+                동영상의 경우 이미지 추출
+                */
+                videoController.videoFrame(filePath, origFileName);
+
+
+                // DB에 저장될 파일 정보 객체 생성
+                FileEntity file = new FileEntity();
+                file.setOrigFilename(origFileName);
+                file.setStoredFilename(filename);
+                file.setFilePath(filePath);
+
+                fileService.saveFile(file);
+
+                return new ResponseEntity<>("Success", HttpStatus.OK);
+
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+        }
+        return new ResponseEntity<>("File not exists", HttpStatus.OK);
+    }
+
+    /*
+        동영상 이미지 변환
+     */
+//    public void videoConvert() throws Exception{
+//        VideoConvertor videoConvertor = new VideoConvertor(); // 동영상을 이미지 프레임으로 변환하는 컨버터
+//        File videoSource = new File("C:/Users/HAYOUNG LEE/Desktop/KakaoTalk_20230523_132614593.mp4");
+//        videoConvertor.getImageFrames(videoSource);
 //    }
+
+    public double extractDuration(File videoSource) throws IOException {
+        try{
+            FrameGrab frameGrab = FrameGrab.createFrameGrab(NIOUtils.readableChannel(videoSource));
+            double durationInSeconds = frameGrab.getVideoTrack().getMeta().getTotalDuration();
+            log.info("video duration: {} seconds", durationInSeconds);
+            return durationInSeconds;
+        }catch(Exception e){
+            log.warn("duration extraction fail");
+        }
+        return 0;
+    }
 
     @PostMapping("/upload")
     public ResponseEntity<?> upload(@RequestParam("content") String html) throws Exception{
@@ -132,7 +162,9 @@ public class FileController {
             // html 파일로부터 video만 추출
             Elements videos = doc.getElementsByTag("iframe");
             if(videos.size() > 0){
-                
+                for(Element v : videos){
+                    String src = v.attr("src"); // 동영상 링크 주소
+                }
             }
             
             // 실제 이미지 파일 가져오기
@@ -199,7 +231,7 @@ public class FileController {
     }
 
     /*
-        OK 버튼 클릭하여 이미지 삽입 시 서버로 업도드되어 저장 ( 글 등록과 다름 )
+        OK 버튼 클릭하여 이미지 삽입 시 서버로 업로드되어 저장 ( 글 등록과 다름 )
      */
     @PostMapping("/image")
     public ResponseEntity<?> image(@RequestParam("image") MultipartFile file) throws Exception{

@@ -11,7 +11,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @EnableWebMvc
 public class WebConfig implements WebMvcConfigurer {
 
-    // C:\Users\HAYOUNG LEE\Desktop\deepfake-api\files
+    /*
+        클라이언트가 /img 경로로 get 요청 시 리소스를 가져올 외부 경로 지정
+     */
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry){
         registry.addResourceHandler("/img/**")
