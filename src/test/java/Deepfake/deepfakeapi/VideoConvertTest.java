@@ -13,7 +13,7 @@ public class VideoConvertTest {
     @Test
     public void videoToImageFrames() throws Exception{
 
-        fileController.videoConvert();
+        fileController.apiTest2();
 
     }
 }

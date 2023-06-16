@@ -6,7 +6,6 @@ import java.io.File;
 
 public class VideoConvertor {
 
-    @Async
     public void getImageFrames(double videoDuration, File video, String filename) throws Exception {
         double plusSize = 0.03; // 1초에 30프레임 컷
         int threadSize = 30;
