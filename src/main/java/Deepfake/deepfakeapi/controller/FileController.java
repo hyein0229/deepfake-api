@@ -58,6 +58,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Files;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -81,11 +82,6 @@ public class FileController {
         // 파일이 존재하면
         if(!files.isEmpty()){
             try {
-//                // 딥페이크 검출 진행
-                //deepFake(cookie, files);
-//                if(isDeepfake){
-//                    return new ResponseEntity<>("deepfake image", HttpStatus.OK);
-//                }
 
                 // 기존 파일이름을 다른 파일 이름으로 저장하기 위해 변환
                 String origFileName = files.getOriginalFilename();
@@ -100,6 +96,7 @@ public class FileController {
                         e.getStackTrace();
                     }
                 }
+
                 String filePath = savedPath + "\\" + filename + ".mp4";
                 // 파일이 로컬에 저장됨
                 files.transferTo(new File(filePath));
@@ -129,47 +126,40 @@ public class FileController {
     @PostMapping("/upload")
     public ResponseEntity<?> upload(@RequestParam("content") String html) throws Exception{
 
-            System.out.println(html);
-            ArrayList<String> imgArray = new ArrayList<>(); // html 에서 parsing한 이미지 파일 이름 리스트
+        System.out.println(html);
+        ArrayList<String> imgArray = new ArrayList<>(); // html 에서 parsing한 이미지 파일 이름 리스트
             
-            // html 파일로부터 img Tag 만 추출하기
-            Document doc = Jsoup.parse(html);
-            Elements imgs = doc.getElementsByTag("img");
-            if(imgs.size() > 0){
-                for(Element img : imgs){
-                    String src = img.attr("src"); // img 태그의 src 속성
-                    String[] splited = src.split("/"); // http://localhost:9999/img/example.png
-                    String imgName = splited[splited.length - 1]; // example.png 추출
-                    imgArray.add(imgName);
-                }
+        // html 파일로부터 img Tag 만 추출하기
+        Document doc = Jsoup.parse(html);
+        Elements imgs = doc.getElementsByTag("img");
+        if(imgs.size() > 0){
+            for(Element img : imgs){
+                String src = img.attr("src"); // img 태그의 src 속성
+                String[] splited = src.split("/"); // http://localhost:9999/img/example.png
+                String imgName = splited[splited.length - 1]; // example.png 추출
+                imgArray.add(imgName);
             }
-            
-            // html 파일로부터 video만 추출, webEditor 에서 video 태그가 인식되지 않음
-//            Elements videos = doc.getElementsByTag("iframe");
-//            if(videos.size() > 0){
-//                for(Element v : videos){
-//                    String src = v.attr("src"); // 동영상 링크 주소
-//                }
-//            }
-            
-            // 실제 이미지 파일 가져오기
-            ArrayList<File> imgFileArray = new ArrayList<>();
-            if(!imgArray.isEmpty()){ // 추출된 img가 존재하는지 확인
-                for(String img : imgArray){
-                    // 서버에 저장된 경로에서 파일 가져오기
-                    File file = new File("C:/Users/HAYOUNG LEE/Desktop/deepfake-api/files/" + img);
-                    System.out.println(file);
-                    imgFileArray.add(file);
-                }
-            }
+        }
 
-            /*
-                deepfake API 로 이미지 파일들을 보내어 딥페이크 탐지 구현
-             */
+        // 실제 이미지 파일 가져오기
+        ArrayList<File> imgFileArray = new ArrayList<>();
+        if(!imgArray.isEmpty()){ // 추출된 img가 존재하는지 확인
+            for(String img : imgArray){
+                // 서버에 저장된 경로에서 파일 가져오기
+                File file = new File("C:/Users/HAYOUNG LEE/Desktop/deepfake-api/files/" + img);
+                System.out.println(file);
+                imgFileArray.add(file);
+            }
+        }
+
+        /*
+            딥페이크 검출
+         */
+        String result = deepFake(imgFileArray);
+        System.out.println(result);
 
         return new ResponseEntity<>("success", HttpStatus.OK);
     }
-
     /*
         OK 버튼 클릭하여 이미지 삽입 시 서버로 업로드되어 저장 ( 글 등록과 다름 )
      */
@@ -200,55 +190,44 @@ public class FileController {
 
         return new ResponseEntity<>(filename + ".png", HttpStatus.OK);
     }
-//
-//    private void deepFake(Cookie cookie, MultipartFile file){
-//
-//        try {
-//            // http client builder
-//            HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
-//
-//            // 모든 인증서를 신뢰하도록 설정
-//            SSLContext sslContext = new SSLContextBuilder().loadTrustMaterial(null, (X509Certificate[] chain, String authType) -> true).build();
-//            httpClientBuilder.setSSLContext(sslContext);
-//
-//            // Https 인증 요청시 호스트네임 유효성 검사를 진행하지 않게 한다.
-//            SSLConnectionSocketFactory sslSocketFactory = new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
-//            Registry<ConnectionSocketFactory> socketFactoryRegistry = RegistryBuilder.<ConnectionSocketFactory>create()
-//                    .register("http", PlainConnectionSocketFactory.getSocketFactory())
-//                    .register("https", sslSocketFactory).build();
-//
-//            PoolingHttpClientConnectionManager connMgr = new PoolingHttpClientConnectionManager(socketFactoryRegistry);
-//            httpClientBuilder.setConnectionManager(connMgr); // http client builder 에 설정
-//
-//            // build 하여 httpclient 생성, RestTemplate 와 HttpClient 연결
-//            HttpClient client = httpClientBuilder.build();
-//
-//            // POST 메소드 URL 생성 & header setting
-////            HttpClient client = HttpClientBuilder.create().build();
-//            HttpPost postRequest = new HttpPost("https://dslabjbnu.iptime.org:8888");
-//            postRequest.setHeader("Accept", MediaType.APPLICATION_JSON_VALUE);
-//            postRequest.setHeader("Connection", "keep-alive");
-//            postRequest.setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE);
-//
-//            List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
-//            nameValuePairs.add(new BasicNameValuePair("login", "user@example.com"));
-//            nameValuePairs.add(new BasicNameValuePair("password", "12341234"));
-//            postRequest.setEntity(new UrlEncodedFormEntity(nameValuePairs));
-//
-//            // CURL execute
-//            HttpResponse response = client.execute(postRequest);
-//            System.out.println(response);
-//        } catch (Exception e){
-//            e.printStackTrace();
-//        }
 
-//    }
+    public String deepFake(ArrayList<File> imgFileArray) throws Exception{
+
+        String HOST = "http://dslabjbnu.iptime.org:8082/predictions/efficient"; // API 서버
+
+        RestTemplate restTemplate = makeRestTemplate(true);
+
+        // http 헤더 세팅
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+
+        // 전송할 Body
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+
+        // 전송할 이미지 데이터
+        Map<String, List<String>> instance = new HashMap<String, List<String>>();
+        List<String> imageArr = new ArrayList<>();
+        for(File file : imgFileArray){
+            imageArr.add(getBase64String(file)); //이미지파일을 json 형태로 보내기 위해 base64로 인코딩
+        }
+        instance.put("body", imageArr); // 전송할 이미지 base64 배열
+        body.add("instances", instance);
+
+        // header, body 를 담아 requestMessage 생성
+        HttpEntity<?> requestMessage = new HttpEntity<>(body, httpHeaders);
+
+        // API 서버에 요청 보낸 후 응답 받기
+        ResponseEntity<String> response = restTemplate.postForEntity(HOST, requestMessage, String.class);
+
+        return response.getBody();
+    }
 
     /*
         이미지 파일을 Base64 로 인코딩
      */
-    private String getBase64String(MultipartFile multipartFile) throws Exception {
-        byte[] bytes = multipartFile.getBytes();
+    private String getBase64String(File file) throws Exception {
+
+        byte[] bytes = Files.readAllBytes(file.toPath());
         return Base64.getEncoder().encodeToString(bytes);
     }
 
@@ -288,40 +267,6 @@ public class FileController {
         }
     }
 
-    /*
-        다른 api 서버에 요청하여 딥페이크 검출한 후 결과 반환
-     */
-    private boolean deepFake(Cookie cookie, MultipartFile file) throws Exception{
-
-        String url = "https://dslabjbnu.iptime.org:8888"; // API 서버
-
-        RestTemplate restTemplate = makeRestTemplate(true);
-
-        // http 헤더 세팅
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
-
-        // 전송할 Body
-        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-        //String imageFileString = getBase64String(file);  // 이미지파일을 json 형태로 보내기 위해 base64로 인코딩
-        body.add("login", "user@example.com");
-        body.add("password", "12341234");
-        //body.add("image", imageFileString);
-
-        // header, body 를 담아 requestMessage 생성
-        HttpEntity<?> requestMessage = new HttpEntity<>(body, httpHeaders);
-
-        // API 서버에 요청 보낸 후 응답 받기
-        ResponseEntity<String> response = restTemplate.postForEntity(url, requestMessage, String.class);
-
-        // 서버 정상 연결 확인
-        System.out.println(response.getHeaders());
-        //assert(response.getStatusCode()).equals(HttpStatus.OK);
-
-        // 딥페이크 검출 여부 반환
-        //boolean isDeepfake = response.getBody();
-        return true;
-    }
 
     public void apiTest2() throws Exception{
 
@@ -354,109 +299,4 @@ public class FileController {
             }
         }
     }
-
-    public void apiTest() throws Exception{
-
-        String HOST = "https://dslabjbnu.iptime.org:8888/"; // API 서버
-        String USERNAME = "user@example.com";
-        String PASSWORD = "12341234";
-
-        RestTemplate restTemplate = makeRestTemplate(true);
-
-//        CloseableHttpClient httpClient = HttpClients.createDefault();
-//
-//        // Disable SSL verification
-//        HttpClientUtils.setSSLVerificationDisabled(httpClient);
-//
-//        // Send GET request
-//        HttpGet getRequest = new HttpGet(HOST);
-//        HttpResponse getResponse = httpClient.execute(getRequest);
-//
-//        // Extract URL from the GET response
-//        String loginUrl = getResponse.getLastHeader("Location").getValue();
-//
-//        // Send POST request to login
-//        HttpPost postRequest = new HttpPost(loginUrl);
-//        postRequest.addHeader("Content-Type", "application/x-www-form-urlencoded");
-//
-//        // Set login credentials
-//        Map<String, String> params = new HashMap<>();
-//        params.put("login", USERNAME);
-//        params.put("password", PASSWORD);
-//
-//        postRequest.setEntity(new StringEntity(ParameterStringBuilder.getParamsString(params)));
-//
-//        HttpResponse postResponse = httpClient.execute(postRequest);
-//
-//        // Get the session cookie
-//        String sessionCookie = httpClient.getCookieStore.getCookies().get(0).getValue();
-//        System.out.println("Session Cookie: " + sessionCookie);
-
-        // http 헤더 세팅
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
-
-        // 전송할 Body
-        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-        //String imageFileString = getBase64String(file);  // 이미지파일을 json 형태로 보내기 위해 base64로 인코딩
-        body.add("login", USERNAME);
-        body.add("password", PASSWORD);
-        //body.add("image", imageFileString);
-
-        // header, body 를 담아 requestMessage 생성
-        HttpEntity<?> requestMessage = new HttpEntity<>(body, httpHeaders);
-
-        // API 서버에 요청 보낸 후 응답 받기
-        ResponseEntity<String> response = restTemplate.postForEntity(HOST, requestMessage, String.class);
-        // 서버 정상 연결 확인
-        System.out.println(response.getHeaders());
-        HttpHeaders header = response.getHeaders();
-        URI uri = header.getLocation();
-        String SESSION_COOKIE = uri.toString().split("state=")[1];
-        System.out.println(SESSION_COOKIE);
-
-        /*
-            iris 모델 api 연동 확인
-         */
-        String irisHost = HOST + "v1/models/sklearn-iris:predict";
-//
-//        /*
-//            request iris dataset
-//         */
-        Map<String, Object> sklearnIrisInput = new HashMap<>();
-        Object[] instances = {
-                new double[]{6.8, 2.8, 4.8, 1.4},
-                new double[]{6.0, 3.4, 4.5, 1.6}
-        };
-        sklearnIrisInput.put("instances", instances);
-        String requestBody = new ObjectMapper().writeValueAsString(sklearnIrisInput);
-
-        httpHeaders.set("Host", "sklearn-iris.kubeflow-user-example-com.example.com");
-        httpHeaders.set("cookies", SESSION_COOKIE);
-        HttpEntity<?> requestIris = new HttpEntity<>(requestBody, httpHeaders);
-
-        ResponseEntity<String> irisResponse = restTemplate.postForEntity(irisHost, requestIris, String.class);
-
-        System.out.println(irisResponse.getBody());
-
-//
-//        // Create POST request
-//        HttpPost postRequest = new HttpPost(predictUrl);
-//        postRequest.setHeaders(headers.entrySet().stream()
-//                .map(entry -> new BasicHeader(entry.getKey(), entry.getValue()))
-//                .toArray(BasicHeader[]::new));
-//        postRequest.setHeader("Content-Type", "application/json");
-//        postRequest.setHeader("Cookie", SESSION_COOKIE + "=" + sessionCookie);
-//
-//        // Set request body
-//        postRequest.setEntity(new StringEntity(requestBody));
-//
-//        // Send POST request
-//        HttpResponse response = httpClient.execute(postRequest);
-//
-//        // Parse and print response
-//        String responseBody = EntityUtils.toString(response.getEntity());
-//        System.out.println(responseBody);
-    }
-
 }
