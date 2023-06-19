@@ -7,7 +7,7 @@ import java.io.File;
 public class VideoConvertor {
 
     public void getImageFrames(double videoDuration, File video, String filename) throws Exception {
-        double plusSize = 0.03; // 1초에 30프레임 컷
+        double plusSize = 0.5; // 1초에 2프레임 컷
         int threadSize = 30;
 
         // 동영상 프레임을 잘라 저장할 디렉토리 생성
@@ -32,5 +32,6 @@ public class VideoConvertor {
                 }
             }
         }
+
     }
 }

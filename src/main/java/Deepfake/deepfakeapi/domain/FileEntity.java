@@ -25,5 +25,6 @@ public class FileEntity {
     @NotNull
     private String filePath; // 서버에 저장된 경로
 
-    private boolean isDeepfake = false; // 딥페이크 검출 여부
+    private int isDeepfake = 0; // 딥페이크 검출 여부
+
 }
