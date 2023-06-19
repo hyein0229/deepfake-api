@@ -1,10 +1,7 @@
 import React from 'react';
 import Typography from "@material-ui/core/Typography";
 import {useState} from "react";
-import {useRef} from "react";
-import Dropzone from "react-dropzone";
 import {Button} from "@material-ui/core";
-import defaultimg from "./logo192.png";
 import axios from "axios";
 import {useNavigate} from "react-router-dom";
 
@@ -78,7 +75,6 @@ export default function VideoUpload(){
                     src={source}
                 />
             )}
-            {/*<div className="VideoInput_footer">{source || "Nothing selected"}</div>*/}
         </div>
     );
 }
